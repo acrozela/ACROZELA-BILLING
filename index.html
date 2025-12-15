@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACROZELA - Billing Software</title>
+    <!-- Updated Favicon to match Brand Logo -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 40'%3E%3Ctext x='10' y='30' font-family='sans-serif' font-weight='900' font-size='24' fill='%231d4ed8' letter-spacing='2'%3EACROZELA%3Ctspan fill='%232563eb'%3E.%3C/tspan%3E%3C/text%3E%3C/svg%3E">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Brand Palette based on Logo */
+            --primary: #2563eb; /* Blue 600 */
+            --primary-hover: #1d4ed8; /* Blue 700 */
+            --primary-light: #eff6ff;
+            --secondary: #64748b; /* Slate 500 */
+            --sidebar-bg: #ffffff; 
+            --sidebar-text: #334155;
+            --bg: #f3f4f6; /* Gray 100 */
+            --surface: #ffffff;
+            --text: #0f172a; /* Slate 900 */
+            --border: #e5e7eb;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            
+            --sidebar-width: 260px;
+            --header-height: 70px;
+            
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --radius: 8px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; font-size: 15px; overflow: hidden; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+        /* Layout */
+        #sidebar { 
+            width: var(--sidebar-width); 
+            background: var(--sidebar-bg); 
+            border-right: 1px solid var(--border);
+            display: flex; 
+            flex-direction: column; 
+            flex-shrink: 0; 
+            z-index: 20; 
+            height: 100vh; 
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        #main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; height: 100vh; background: var(--bg); }
+        
+        header { 
+            height: var(--header-height); 
+            background: var(--surface); 
+            border-bottom: 1px solid var(--border); 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 0 2rem; 
+            flex-shrink: 0; 
+            z-index: 10;
+        }
+        
+        #content { flex: 1; overflow-y: auto; padding: 2rem; position: relative; scroll-behavior: smooth; }
+
+        /* Typography & Utilities */
+        h1, h2, h3, h4 { font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+        h2 { font-size: 1.5rem; }
+        h3 { font-size: 1.25rem; margin-bottom: 0.5rem; }
+        .text-sm { font-size: 0.875rem; color: var(--secondary); }
+        .text-xs { font-size: 0.75rem; }
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .gap-2 { gap: 0.5rem; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mt-4 { margin-top: 1rem; }
+        .w-full { width: 100%; }
+        .text-right { text-align: right; }
+        .font-bold { font-weight: 700; }
+        .text-center { text-align: center; }
+
+        /* Brand Logo SVG Implementation */
+        .brand-container { 
+            padding: 0 1.5rem; 
+            height: var(--header-height);
+            display: flex; 
+            align-items: center; 
+            border-bottom: 1px solid var(--border);
+        }
+        .brand-svg { height: 28px; width: auto; }
+
+        /* Navigation */
+        .nav-scroll { flex: 1; overflow-y: auto; padding: 1.5rem 0; }
+        .nav-group { margin-bottom: 1.5rem; }
+        .nav-title { padding: 0 1.5rem; margin-bottom: 0.5rem; font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+        .nav-item { 
+            display: flex; 
+            align-items: center; 
+            padding: 0.65rem 1.5rem; 
+            color: var(--sidebar-text); 
+            text-decoration: none; 
+            font-weight: 500; 
+            transition: 0.2s; 
+            cursor: pointer; 
+            border-left: 3px solid transparent; 
+        }
+        .nav-item:hover { color: var(--primary); background: var(--primary-light); }
+        .nav-item.active { 
+            color: var(--primary); 
+            background: var(--primary-light); 
+            border-left-color: var(--primary); 
+            font-weight: 600;
+        }
+        
+        .sidebar-footer { 
+            padding: 1.5rem; 
+            border-top: 1px solid var(--border); 
+            font-size: 0.7rem; 
+            color: var(--secondary); 
+            text-align: center; 
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        /* Buttons */
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.6rem 1.2rem; border-radius: var(--radius); font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: 0.2s; font-size: 0.875rem; gap: 0.5rem; font-family: inherit; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3); }
+        .btn-outline { background: white; border-color: var(--border); color: var(--text); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); background: #f8fafc; }
+        .btn-danger { background: #fee2e2; color: var(--danger); }
+        .btn-danger:hover { background: var(--danger); color: white; }
+        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.75rem; border-radius: 6px; }
+
+        /* Cards & Grid */
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); }
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+
+        /* Forms */
+        .form-group { margin-bottom: 1rem; }
+        .form-label { display: block; margin-bottom: 0.4rem; font-weight: 500; font-size: 0.875rem; color: var(--text); }
+        .form-input, .form-select, textarea { width: 100%; padding: 0.7rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; transition: 0.2s; background: #fff; font-family: inherit; }
+        .form-input:focus, .form-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        
+        /* Tables */
+        .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 0.8rem 1.2rem; background: #f8fafc; border-bottom: 1px solid var(--border); font-size: 0.75rem; text-transform: uppercase; color: var(--secondary); font-weight: 700; white-space: nowrap; }
+        td { padding: 0.8rem 1.2rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--text); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        
+        .client-photo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #eee; border: 1px solid #ddd; }
+        
+        /* Dashboard Stats */
+        .stat-card { display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--text); margin: 0.5rem 0; }
+        .stat-label { font-size: 0.875rem; color: var(--secondary); }
+        .stat-trend { font-size: 0.75rem; font-weight: 600; color: var(--success); }
+
+        /* Invoice Tool Specifics */
+        .invoice-sheet { background: white; padding: 2rem; border: 1px solid var(--border); border-radius: var(--radius); max-width: 800px; margin: 0 auto; }
+        .invoice-header { display: flex; justify-content: space-between; margin-bottom: 2rem; border-bottom: 2px solid var(--primary); padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem; }
+        .line-items th { background: var(--primary); color: white; }
+        .invoice-total-section { display: flex; justify-content: flex-end; margin-top: 1rem; }
+        .invoice-total-row { display: flex; justify-content: space-between; width: 250px; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
+        
+        /* Modals */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 2rem; border-radius: var(--radius); width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+
+        /* Badge */
+        .badge { padding: 0.25rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; }
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-yellow { background: #fef3c7; color: #b45309; }
+        .badge-red { background: #fee2e2; color: #b91c1c; }
+        .badge-purple { background: #f3e8ff; color: #6b21a8; }
+        
+        /* Google Tools Grid */
+        .g-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; }
+        .g-card { display: flex; flex-direction: column; align-items: center; padding: 1.5rem; background: white; border: 1px solid var(--border); border-radius: var(--radius); text-decoration: none; color: var(--text); transition: 0.2s; cursor: pointer; opacity: 0.6; pointer-events: none; }
+        .g-card.active { opacity: 1; pointer-events: auto; }
+        .g-card:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: var(--shadow); }
+        .g-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+
+        /* Delivery Timeline */
+        .timeline { position: relative; padding-left: 1.5rem; margin-top: 1rem; }
+        .timeline::before { content: ''; position: absolute; left: 6px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+        .timeline-item { position: relative; margin-bottom: 1.5rem; }
+        .timeline-dot { position: absolute; left: -1.5rem; top: 0.25rem; width: 14px; height: 14px; border-radius: 50%; background: var(--border); border: 2px solid white; box-shadow: 0 0 0 2px var(--border); }
+        .timeline-item.active .timeline-dot { background: var(--success); box-shadow: 0 0 0 2px var(--success); }
+        .timeline-date { font-size: 0.75rem; color: var(--secondary); margin-bottom: 0.25rem; }
+        .timeline-status { font-weight: 600; font-size: 0.9rem; }
+
+        /* Calculator Styles */
+        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+        .calc-btn { padding: 1rem; font-size: 1.2rem; background: #f1f5f9; border: none; border-radius: 6px; cursor: pointer; transition: 0.1s; }
+        .calc-btn:hover { background: #e2e8f0; }
+        .calc-btn.op { background: var(--primary-light); color: var(--primary); font-weight: bold; }
+        .calc-btn.eq { background: var(--primary); color: white; grid-column: span 2; }
+        .calc-display { width: 100%; padding: 1rem; font-size: 2rem; text-align: right; background: #1e293b; color: white; border-radius: 6px; margin-bottom: 1rem; border: none; }
+
+        /* Print Styles */
+        @media print {
+            #sidebar, header, .no-print { display: none !important; }
+            #content { padding: 0; overflow: visible; }
+            .invoice-sheet { border: none; box-shadow: none; max-width: 100%; width: 100%; margin: 0; padding: 0; }
+            body { background: white; height: auto; }
+        }
+
+        @media (max-width: 768px) {
+            #sidebar { position: fixed; transform: translateX(-100%); width: 280px; box-shadow: 10px 0 20px rgba(0,0,0,0.2); }
+            #sidebar.open { transform: translateX(0); }
+            header { padding: 0 1rem; }
+            #content { padding: 1rem; }
+            .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
+            .invoice-sheet { padding: 1rem; }
+            .invoice-total-row { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <div class="brand-container">
+        <!-- Recreated Logo using SVG -->
+        <svg class="brand-svg" viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg">
+            <text x="0" y="30" font-family="sans-serif" font-weight="900" font-size="28" fill="#2563eb" letter-spacing="2">
+                ACROZELA<tspan fill="#9ca3af">.</tspan>
+            </text>
+        </svg>
+    </div>
+    
+    <div class="nav-scroll">
+        <div class="nav-group">
+            <div class="nav-title">Management</div>
+            <div class="nav-item active" onclick="app.nav('dashboard')">Dashboard</div>
+            <div class="nav-item" onclick="app.nav('crm')">CRM & Clients</div>
+            <div class="nav-item" onclick="app.nav('sales')">Sales & Orders</div>
+            <div class="nav-item" onclick="app.nav('invoice-tool')">🧾 Invoice Generator</div>
+            <div class="nav-item" onclick="app.nav('delivery')">🚚 Delivery Tracking</div>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-title">Inventory & Finance</div>
+            <div class="nav-item" onclick="app.nav('stock')">Inventory & Stock</div>
+            <div class="nav-item" onclick="app.nav('expenses')">Expenses</div>
+            <div class="nav-item" onclick="app.nav('accounting')">Accounting & Ledger</div>
+            <div class="nav-item" onclick="app.nav('reports')">Profit & Loss</div>
+            <div class="nav-item" onclick="app.nav('taxes')">Taxes & Balance</div>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-title">Integrations & Tools</div>
+            <div class="nav-item" onclick="app.nav('calculators')">Calculators & GST</div>
+            <div class="nav-item" onclick="app.nav('google')">Google Workspace</div>
+            <div class="nav-item" onclick="app.nav('utilities')">Utilities</div>
+        </div>
+    </div>
+    
+    <div class="sidebar-footer">
+        2025 COPYRIGHT<br>ACROZELA BILLING SOFTWARE
+    </div>
+</div>
+
+<div id="main-wrapper">
+    <header>
+        <div class="flex items-center gap-2">
+            <button class="btn btn-outline btn-sm" id="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')" style="display: none;">☰</button>
+            <script>
+                // Show menu button only on mobile
+                if(window.innerWidth <= 768) document.getElementById('menu-btn').style.display = 'inline-flex';
+                window.addEventListener('resize', () => {
+                    document.getElementById('menu-btn').style.display = window.innerWidth <= 768 ? 'inline-flex' : 'none';
+                });
+            </script>
+            <h2 id="page-title">Dashboard</h2>
+        </div>
+        <div class="flex items-center gap-2">
+            <button class="btn btn-outline btn-sm no-print" onclick="app.nav('invoice-tool')">+ New Invoice</button>
+            <div style="width:36px; height:36px; background:var(--primary); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700;">A</div>
+        </div>
+    </header>
+
+    <div id="content">
+        <!-- Dashboard -->
+        <div id="view-dashboard" class="view-section fade-in">
+            <div class="grid-4 mb-4">
+                <div class="card stat-card">
+                    <span class="stat-label">Total Clients</span>
+                    <span class="stat-value" id="d-clients">0</span>
+                    <span class="stat-trend">Active Base</span>
+                </div>
+                <div class="card stat-card">
+                    <span class="stat-label">Revenue</span>
+                    <span class="stat-value" id="d-revenue">₹0.00</span>
+                    <span class="stat-trend">Total Sales</span>
+                </div>
+                <div class="card stat-card">
+                    <span class="stat-label">Expenses</span>
+                    <span class="stat-value" id="d-expenses">₹0.00</span>
+                    <span class="stat-trend" style="color:var(--danger)">Outgoing</span>
+                </div>
+                <div class="card stat-card">
+                    <span class="stat-label">Net Profit</span>
+                    <span class="stat-value" id="d-profit">₹0.00</span>
+                    <span class="stat-trend">Calculated</span>
+                </div>
+            </div>
+
+            <div id="empty-state" class="card" style="text-align:center; padding: 4rem 2rem;">
+                <h3 style="color:var(--secondary);">Welcome to ACROZELA</h3>
+                <p class="text-sm mb-4">Select "Invoice Generator" to create your first professional bill.</p>
+                <button class="btn btn-primary" onclick="app.nav('invoice-tool')">Create Invoice</button>
+            </div>
+
+            <div id="dashboard-charts" class="grid-2 hidden">
+                <div class="card">
+                    <h3>Recent Activity</h3>
+                    <div class="table-container" style="border:none; margin-top:1rem;">
+                        <table id="recent-table"><tbody></tbody></table>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Monthly Volume</h3>
+                    <div style="height: 200px; display: flex; align-items: flex-end; justify-content: space-around; padding-top: 2rem;">
+                         <div style="width:15%; height:40%; background:var(--primary); opacity:0.3; border-radius:4px 4px 0 0;"></div>
+                         <div style="width:15%; height:60%; background:var(--primary); opacity:0.5; border-radius:4px 4px 0 0;"></div>
+                         <div style="width:15%; height:30%; background:var(--primary); opacity:0.4; border-radius:4px 4px 0 0;"></div>
+                         <div style="width:15%; height:80%; background:var(--primary); border-radius:4px 4px 0 0;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoice Generator Tool -->
+        <div id="view-invoice-tool" class="view-section hidden fade-in">
+            <div class="flex justify-between items-center mb-4 no-print" style="flex-wrap: wrap; gap:1rem;">
+                <h3>Invoice Generator</h3>
+                <div class="flex gap-2" style="flex-wrap: wrap;">
+                    <button class="btn btn-outline" onclick="app.shareInvoice()">🔗 Share</button>
+                    <button class="btn btn-outline" onclick="app.downloadPDF()">⬇️ Download PDF</button>
+                    <button class="btn btn-outline" onclick="app.printInvoice()">🖨️ Print</button>
+                    <button class="btn btn-primary" onclick="app.saveInvoice()">💾 Save to Sales</button>
+                </div>
+            </div>
+
+            <div class="grid-2 mb-4 no-print">
+                <div class="card">
+                    <h4>Invoice Details</h4>
+                    <div class="form-group mt-4">
+                        <label class="form-label">Select Client</label>
+                        <select id="inv-client" class="form-select" onchange="app.updateInvoiceClient()"></select>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Invoice #</label>
+                            <input type="text" id="inv-number" class="form-input" value="INV-001">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date</label>
+                            <input type="date" id="inv-date" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tax / GST Rate</label>
+                        <select id="inv-tax-rate" class="form-select" onchange="app.renderInvoiceTable()">
+                            <option value="0">Exempt (0%)</option>
+                            <option value="5">GST 5%</option>
+                            <option value="12">GST 12%</option>
+                            <option value="18" selected>GST 18%</option>
+                            <option value="28">GST 28%</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card">
+                    <h4>Add Item</h4>
+                    <div class="form-group mt-4">
+                        <label class="form-label">Product / Description</label>
+                        <input type="text" id="inv-item-desc" class="form-input" placeholder="Search product..." list="stock-list">
+                        <datalist id="stock-list"></datalist>
+                    </div>
+                     <div class="form-group">
+                        <label class="form-label">Quality / Note</label>
+                        <input type="text" id="inv-item-note" class="form-input" placeholder="e.g. Grade A, Box of 10">
+                    </div>
+                    <div class="grid-3" style="grid-template-columns: 1fr 1fr 1fr auto;">
+                        <div class="form-group">
+                            <label class="form-label">Qty</label>
+                            <input type="number" id="inv-item-qty" class="form-input" value="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Rate (₹)</label>
+                            <input type="number" id="inv-item-rate" class="form-input" placeholder="0.00">
+                        </div>
+                        <div class="form-group" style="display:flex; align-items:flex-end;">
+                            <button class="btn btn-primary w-full" onclick="app.addInvoiceItem()">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- The Printable Invoice Sheet -->
+            <div id="invoice-sheet" class="invoice-sheet">
+                <div class="invoice-header">
+                    <div>
+                        <svg viewBox="0 0 200 40" style="height:30px; margin-bottom:10px;">
+                            <text x="0" y="30" font-family="sans-serif" font-weight="900" font-size="28" fill="#2563eb" letter-spacing="2">ACROZELA<tspan fill="#9ca3af">.</tspan></text>
+                        </svg>
+                        <div class="text-sm">Billing & Software Solutions</div>
+                        <div class="text-sm">123 Business Park, India</div>
+                    </div>
+                    <div class="text-right">
+                        <h2 style="color:var(--primary);">INVOICE</h2>
+                        <div class="font-bold" id="disp-inv-num">#INV-001</div>
+                        <div class="text-sm" id="disp-inv-date">Date: 2025-01-01</div>
+                    </div>
+                </div>
+
+                <div class="grid-2 mb-4">
+                    <div>
+                        <div class="text-sm font-bold text-secondary">BILL TO</div>
+                        <h4 id="disp-client-name" style="margin-top:0.5rem;">Select a Client</h4>
+                        <div class="text-sm" id="disp-client-addr">Address...</div>
+                        <div class="text-sm" id="disp-client-phone">Phone...</div>
+                    </div>
+                </div>
+
+                <table class="w-full mt-4 line-items">
+                    <thead>
+                        <tr style="border-bottom:2px solid var(--primary);">
+                            <th class="text-left" style="padding:10px;">Description</th>
+                            <th class="text-right" style="padding:10px;">Qty</th>
+                            <th class="text-right" style="padding:10px;">Rate</th>
+                            <th class="text-right" style="padding:10px;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inv-items-body">
+                        <!-- Items go here -->
+                    </tbody>
+                </table>
+
+                <div class="invoice-total-section">
+                    <div>
+                        <div class="invoice-total-row">
+                            <span>Subtotal</span>
+                            <span id="inv-subtotal">₹0.00</span>
+                        </div>
+                        <div class="invoice-total-row">
+                            <span id="inv-tax-label">Tax (18%)</span>
+                            <span id="inv-tax">₹0.00</span>
+                        </div>
+                        <div class="invoice-total-row" style="border:none; font-size:1.2rem; font-weight:700; color:var(--primary); margin-top:0.5rem;">
+                            <span>Total</span>
+                            <span id="inv-total">₹0.00</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top:4rem; border-top:1px solid var(--border); padding-top:1rem; text-align:center; color:var(--secondary); font-size:0.8rem;">
+                    Thank you for your business. Payment is due within 15 days.
+                </div>
+            </div>
+        </div>
+
+        <!-- Calculators & GST Tools -->
+        <div id="view-calculators" class="view-section hidden fade-in">
+            <h3>Calculators & GST Tools</h3>
+            <div class="grid-2 mt-4">
+                <!-- GST Calculator -->
+                <div class="card">
+                    <h4 class="mb-4">GST Calculator</h4>
+                    <div class="form-group">
+                        <label class="form-label">Amount (₹)</label>
+                        <input type="number" id="gst-calc-amount" class="form-input" placeholder="Enter Amount" oninput="app.calcGST()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">GST Rate</label>
+                        <div class="flex gap-2">
+                            <button class="btn btn-sm btn-outline" onclick="app.setGSTRate(5)">5%</button>
+                            <button class="btn btn-sm btn-outline" onclick="app.setGSTRate(12)">12%</button>
+                            <button class="btn btn-sm btn-primary" onclick="app.setGSTRate(18)">18%</button>
+                            <button class="btn btn-sm btn-outline" onclick="app.setGSTRate(28)">28%</button>
+                        </div>
+                        <input type="hidden" id="gst-calc-rate" value="18">
+                    </div>
+                    <div class="form-group">
+                         <div class="flex gap-2">
+                             <button class="btn btn-sm btn-primary w-full" id="btn-gst-add" onclick="app.setGSTMode('add')">Add GST (+)</button>
+                             <button class="btn btn-sm btn-outline w-full" id="btn-gst-sub" onclick="app.setGSTMode('sub')">Remove GST (-)</button>
+                         </div>
+                         <input type="hidden" id="gst-calc-mode" value="add">
+                    </div>
+                    <div style="background:#f8fafc; padding:1rem; border-radius:8px; margin-top:1rem;">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-sm">Net Amount</span>
+                            <span class="font-bold" id="gst-res-net">₹0.00</span>
+                        </div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-sm">GST Amount</span>
+                            <span class="font-bold text-primary" id="gst-res-amt">₹0.00</span>
+                        </div>
+                        <div class="flex justify-between" style="border-top:1px solid #ddd; padding-top:0.5rem;">
+                            <span class="text-sm font-bold">Total Amount</span>
+                            <span class="font-bold text-success" style="font-size:1.2rem;" id="gst-res-total">₹0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Basic Calculator -->
+                <div class="card">
+                    <h4 class="mb-4">Basic Calculator</h4>
+                    <input type="text" id="calc-display" class="calc-display" readonly value="0">
+                    <div class="calc-grid">
+                        <button class="calc-btn op" onclick="app.calcIn('C')">C</button>
+                        <button class="calc-btn op" onclick="app.calcIn('/')">/</button>
+                        <button class="calc-btn op" onclick="app.calcIn('*')">×</button>
+                        <button class="calc-btn op" onclick="app.calcIn('back')">⌫</button>
+                        
+                        <button class="calc-btn" onclick="app.calcIn('7')">7</button>
+                        <button class="calc-btn" onclick="app.calcIn('8')">8</button>
+                        <button class="calc-btn" onclick="app.calcIn('9')">9</button>
+                        <button class="calc-btn op" onclick="app.calcIn('-')">-</button>
+                        
+                        <button class="calc-btn" onclick="app.calcIn('4')">4</button>
+                        <button class="calc-btn" onclick="app.calcIn('5')">5</button>
+                        <button class="calc-btn" onclick="app.calcIn('6')">6</button>
+                        <button class="calc-btn op" onclick="app.calcIn('+')">+</button>
+                        
+                        <button class="calc-btn" onclick="app.calcIn('1')">1</button>
+                        <button class="calc-btn" onclick="app.calcIn('2')">2</button>
+                        <button class="calc-btn" onclick="app.calcIn('3')">3</button>
+                        <button class="calc-btn eq" onclick="app.calcRes()">=</button>
+
+                        <button class="calc-btn" onclick="app.calcIn('0')">0</button>
+                        <button class="calc-btn" onclick="app.calcIn('.')">.</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CRM View -->
+        <div id="view-crm" class="view-section hidden fade-in">
+            <div class="flex justify-between items-center mb-4">
+                <h3>Client Management</h3>
+                <div class="flex gap-2">
+                     <button class="btn btn-outline" onclick="app.findNearbyClients()">📍 Find Nearby</button>
+                    <button class="btn btn-primary" onclick="app.openClientModal()">+ Add Client</button>
+                </div>
+            </div>
+             <div id="map-container" class="card hidden mb-4" style="background:#e0e7ff; height:200px; display:flex; align-items:center; justify-content:center; flex-direction:column; text-align:center;">
+                <h3 style="color:var(--primary);">Google Maps Integration</h3>
+                <p class="text-sm">Click 'Navigate' on a client to open Google Maps Directions.</p>
+                <button class="btn btn-sm btn-outline mt-4" onclick="document.getElementById('map-container').classList.add('hidden')">Close Map</button>
+            </div>
+            <div class="card" style="padding:0;">
+                <div class="table-container" style="border:none;">
+                    <table id="client-table">
+                        <thead>
+                            <tr>
+                                <th style="width:60px;">Photo</th>
+                                <th>Client Details</th>
+                                <th>Contact & Location</th>
+                                <th>Orders</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales History -->
+        <div id="view-sales" class="view-section hidden fade-in">
+            <h3>Sales & Order History</h3>
+            <div class="card mt-4" style="padding:0;">
+                 <div class="table-container" style="border:none;">
+                    <table id="sales-table">
+                        <thead><tr><th>Date</th><th>Client</th><th>Order / Invoice</th><th>Products & Qty</th><th>Amount</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delivery Tracking -->
+        <div id="view-delivery" class="view-section hidden fade-in">
+            <div class="flex justify-between items-center mb-4">
+                <h3>Delivery Tracking</h3>
+                <button class="btn btn-primary" onclick="app.openModal('delivery-modal')">+ Create Shipment</button>
+            </div>
+            <div class="grid-2">
+                <div class="card" style="padding:0;">
+                    <div class="table-container" style="border:none;">
+                        <table id="delivery-table">
+                            <thead><tr><th>ID</th><th>Client</th><th>Status</th><th>Action</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card" id="delivery-detail" style="display:none;">
+                    <h4 id="trk-id">TRK-0000</h4>
+                    <p class="text-sm mb-4" id="trk-client">Client Name</p>
+                    <div class="timeline">
+                        <div class="timeline-item active">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-status">Order Placed</div>
+                            <div class="timeline-date">Verified</div>
+                        </div>
+                        <div class="timeline-item" id="trk-step-shipped">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-status">Shipped</div>
+                            <div class="timeline-date">In Transit</div>
+                        </div>
+                        <div class="timeline-item" id="trk-step-delivered">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-status">Delivered</div>
+                            <div class="timeline-date">Final Destination</div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button class="btn btn-primary w-full" onclick="app.shareTracking()">🔗 Share Tracking Link</button>
+                        <button class="btn btn-outline w-full mt-4" onclick="app.updateDeliveryStatus()">Update Status</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock -->
+        <div id="view-stock" class="view-section hidden fade-in">
+            <div class="flex justify-between items-center mb-4">
+                <h3>Inventory Management</h3>
+                <button class="btn btn-primary" onclick="app.openStockModal()">+ Add New Item</button>
+            </div>
+            <div class="card mb-4" style="padding:0;">
+                <div class="table-container" style="border:none;">
+                    <table id="stock-table">
+                        <thead><tr><th>SKU</th><th>Item</th><th>Qty</th><th>Price</th><th>Value</th><th>Actions</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <h3>Stock Movements</h3>
+            <div class="card mt-2" style="padding:0;">
+                <div class="table-container" style="border:none; max-height:300px; overflow-y:auto;">
+                    <table id="stock-move-table">
+                        <thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Change</th><th>Reason</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expenses -->
+        <div id="view-expenses" class="view-section hidden fade-in">
+            <div class="flex justify-between items-center mb-4">
+                <h3>Expenses</h3>
+                <button class="btn btn-primary" onclick="app.openModal('expense-modal')">+ Add Expense</button>
+            </div>
+            <div class="card" style="padding:0;">
+                <div class="table-container" style="border:none;">
+                     <table id="expense-table">
+                        <thead><tr><th>Date</th><th>Category</th><th>Note</th><th>Amount</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accounting Tools -->
+        <div id="view-accounting" class="view-section hidden fade-in">
+            <h3>Accounting & Ledger</h3>
+            <div class="grid-2 mt-4">
+                <div class="card">
+                    <h4>General Ledger</h4>
+                    <div class="flex justify-between mt-4 mb-2">
+                        <span class="text-sm font-bold">Total Debits (Exp)</span>
+                        <span class="text-sm font-bold">Total Credits (Sales)</span>
+                    </div>
+                    <div class="flex justify-between mb-4">
+                        <span style="color:var(--danger); font-size:1.2rem;" id="acc-debit">₹0.00</span>
+                        <span style="color:var(--success); font-size:1.2rem;" id="acc-credit">₹0.00</span>
+                    </div>
+                    <hr style="border:0; border-top:1px solid var(--border); margin-bottom:1rem;">
+                    <div class="flex justify-between">
+                         <span class="font-bold">Net Balance</span>
+                         <span class="font-bold" id="acc-balance">₹0.00</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <h4>Recent Transactions</h4>
+                    <div class="table-container" style="border:none; margin-top:1rem; max-height:200px; overflow-y:auto;">
+                        <table id="ledger-table"><tbody></tbody></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Google Tools -->
+        <div id="view-google" class="view-section hidden fade-in">
+            <div class="flex justify-between items-center mb-4">
+                <h3>Google Workspace Integration</h3>
+                <div id="g-auth-btn">
+                     <button class="btn btn-primary" onclick="app.openModal('google-login-modal')">Connect Google Account</button>
+                </div>
+                <div id="g-user-profile" class="hidden items-center gap-2">
+                    <div style="text-align:right;">
+                        <div class="text-sm font-bold" id="g-email">user@gmail.com</div>
+                        <div class="text-xs" style="color:var(--success);">● Connected</div>
+                    </div>
+                    <div style="width:32px; height:32px; background:#e0e7ff; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--primary);">G</div>
+                </div>
+            </div>
+
+            <div id="g-tools-lock" class="card text-center" style="padding:3rem;">
+                <div style="font-size:2rem; margin-bottom:1rem;">🔒</div>
+                <h4>Tools Locked</h4>
+                <p class="text-sm mb-4">Please connect your Google Account to access Workspace tools.</p>
+            </div>
+
+            <div id="g-tools-grid" class="g-grid hidden">
+                <a href="https://mail.google.com" target="_blank" class="g-card active"><div class="g-icon" style="color:#ea4335;">✉️</div>Gmail</a>
+                <a href="https://drive.google.com" target="_blank" class="g-card active"><div class="g-icon" style="color:#1fa463;">📁</div>Drive</a>
+                <a href="https://docs.google.com" target="_blank" class="g-card active"><div class="g-icon" style="color:#2684fc;">📝</div>Docs</a>
+                <a href="https://sheets.google.com" target="_blank" class="g-card active"><div class="g-icon" style="color:#1fa463;">📊</div>Sheets</a>
+                <a href="https://calendar.google.com" target="_blank" class="g-card active"><div class="g-icon" style="color:#2684fc;">📅</div>Calendar</a>
+                <a href="https://meet.google.com" target="_blank" class="g-card active"><div class="g-icon" style="color:#00897b;">📹</div>Meet</a>
+                <a href="https://analytics.google.com" target="_blank" class="g-card active"><div class="g-icon" style="color:#f59e0b;">📈</div>Analytics</a>
+            </div>
+        </div>
+
+        <!-- Utilities -->
+        <div id="view-utilities" class="view-section hidden fade-in">
+            <h3>Utilities</h3>
+            <div class="grid-3 mt-4">
+                <div class="card">
+                    <h4>Barcode Generator</h4>
+                    <input type="text" class="form-input mt-4" placeholder="Code">
+                    <button class="btn btn-primary mt-4 w-full">Generate</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Other Placeholders -->
+        <div id="view-reports" class="view-section hidden"><div class="card"><h3>Profit & Loss Report</h3><p class="text-sm">Reports generated based on sales and expense data.</p></div></div>
+        <div id="view-taxes" class="view-section hidden"><div class="card"><h3>Tax Liability</h3><p class="text-sm">Calculated from 18% GST on Sales.</p></div></div>
+
+    </div>
+</div>
+
+<!-- Modals -->
+<div id="client-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3>Client Details</h3><button onclick="app.closeModal('client-modal')" class="btn-outline btn-sm">✕</button></div>
+        <form onsubmit="app.saveClient(event)">
+            <input type="hidden" name="id">
+            <div class="form-group" style="text-align:center;">
+                <label for="client-photo-in" style="cursor:pointer;">
+                    <div style="width:80px; height:80px; border-radius:50%; background:#f1f5f9; border:2px dashed #cbd5e1; display:inline-flex; align-items:center; justify-content:center; overflow:hidden;" id="client-photo-preview">
+                        <span>📷</span>
+                    </div>
+                </label>
+                <input type="file" id="client-photo-in" accept="image/*" class="hidden" onchange="app.previewClientPhoto(this)">
+                <input type="hidden" name="photo">
+                <div class="text-xs text-secondary mt-1">Click to upload photo</div>
+            </div>
+
+            <div class="form-group"><label class="form-label">Name / Shop Name</label><input name="name" class="form-input" required placeholder="e.g. John Doe or Doe Enterprises"></div>
+            
+            <div class="form-group">
+                <label class="form-label">Client Type</label>
+                <select name="type" class="form-select">
+                    <option value="Retailer">Retailer</option>
+                    <option value="Wholesaler">Wholesaler</option>
+                    <option value="Supplier">Supplier</option>
+                    <option value="Distributor">Distributor</option>
+                    <option value="Buyer">Buyer</option>
+                </select>
+            </div>
+
+            <div class="grid-2">
+                 <div class="form-group"><label class="form-label">Phone No</label><input name="phone" class="form-input" placeholder="+91..."></div>
+                 <div class="form-group"><label class="form-label">Shop Location Pin</label><input name="location" class="form-input" placeholder="Maps URL"></div>
+            </div>
+            
+            <div class="form-group"><label class="form-label">Shop Address</label><textarea name="address" class="form-input" rows="2"></textarea></div>
+            
+            <button class="btn btn-primary w-full">Save Client</button>
+        </form>
+    </div>
+</div>
+
+<div id="stock-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3>Add New Item</h3><button onclick="app.closeModal('stock-modal')" class="btn-outline btn-sm">✕</button></div>
+        <form onsubmit="app.saveStock(event)">
+            <div class="grid-2">
+                <div class="form-group"><label class="form-label">SKU</label><input name="sku" class="form-input" required placeholder="Unique Code"></div>
+                <div class="form-group"><label class="form-label">Name</label><input name="name" class="form-input" required></div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label class="form-label">Initial Qty</label><input type="number" name="qty" class="form-input" required></div>
+                <div class="form-group"><label class="form-label">Price</label><input type="number" name="price" class="form-input" step="0.01" required></div>
+            </div>
+            <button class="btn btn-primary w-full">Create Item</button>
+        </form>
+    </div>
+</div>
+
+<div id="stock-adjust-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3>Adjust Stock</h3><button onclick="app.closeModal('stock-adjust-modal')" class="btn-outline btn-sm">✕</button></div>
+        <form onsubmit="app.confirmStockAdjustment(event)">
+            <input type="hidden" name="sku">
+            <input type="hidden" name="type">
+            <h4 id="adj-title" class="mb-4">Item Name</h4>
+            <div class="form-group">
+                <label class="form-label">Quantity to <span id="adj-type-label"></span></label>
+                <input type="number" name="qty" class="form-input" required min="1">
+            </div>
+             <div class="form-group">
+                <label class="form-label">Note</label>
+                <input type="text" name="note" class="form-input" placeholder="Reason (e.g. Restock, Damaged)">
+            </div>
+            <button class="btn btn-primary w-full">Confirm Adjustment</button>
+        </form>
+    </div>
+</div>
+
+<div id="expense-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3>Add Expense</h3><button onclick="app.closeModal('expense-modal')" class="btn-outline btn-sm">✕</button></div>
+        <form onsubmit="app.saveExpense(event)">
+            <div class="form-group"><label class="form-label">Category</label><select name="category" class="form-select"><option>Rent</option><option>Supplies</option><option>Other</option></select></div>
+            <div class="form-group"><label class="form-label">Description</label><input name="desc" class="form-input" required></div>
+            <div class="form-group"><label class="form-label">Amount</label><input type="number" name="amount" class="form-input" required></div>
+            <button class="btn btn-primary w-full">Save Expense</button>
+        </form>
+    </div>
+</div>
+
+<div id="delivery-modal" class="modal">
+    <div class="modal-content">
+         <div class="modal-header"><h3>Create Shipment</h3><button onclick="app.closeModal('delivery-modal')" class="btn-outline btn-sm">✕</button></div>
+         <form onsubmit="app.saveDelivery(event)">
+            <div class="form-group"><label class="form-label">Tracking ID</label><input name="trackId" class="form-input" value="TRK-" required></div>
+            <div class="form-group">
+                <label class="form-label">Client</label>
+                <select name="clientId" id="del-client-select" class="form-select" required></select>
+            </div>
+            <button class="btn btn-primary w-full">Create</button>
+         </form>
+    </div>
+</div>
+
+<div id="google-login-modal" class="modal">
+    <div class="modal-content" style="text-align:center;">
+        <div style="font-size:3rem; margin-bottom:1rem;">G</div>
+        <h3>Sign in with Google</h3>
+        <p class="text-sm mb-4">This will connect all Workspace tools to your dashboard.</p>
+        <form onsubmit="app.googleLogin(event)">
+            <div class="form-group">
+                <input type="email" name="email" class="form-input" placeholder="Enter your Gmail" required>
+            </div>
+            <button class="btn btn-primary w-full">Sign In</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const app = {
+        db: { clients: [], sales: [], expenses: [], stock: [], stockMovements: [], deliveries: [] },
+        invoiceItems: [],
+        currentUser: null,
+        activeDelivery: null,
+        calcInput: '',
+        
+        init() {
+            const saved = localStorage.getItem('acrozela_data');
+            if (saved) { 
+                this.db = JSON.parse(saved); 
+                if(!this.db.stock) this.db.stock=[];
+                if(!this.db.stockMovements) this.db.stockMovements=[];
+                if(!this.db.deliveries) this.db.deliveries=[];
+            }
+            
+            // Check Google User
+            const gUser = localStorage.getItem('acrozela_g_user');
+            if(gUser) this.setGoogleUser(gUser);
+
+            // Set default date for invoice
+            document.getElementById('inv-date').valueAsDate = new Date();
+            
+            this.render();
+            const hash = window.location.hash.replace('#', '');
+            this.nav(hash || 'dashboard');
+        },
+
+        save() {
+            localStorage.setItem('acrozela_data', JSON.stringify(this.db));
+            this.render();
+        },
+
+        nav(view) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById('view-' + view);
+            if(target) {
+                target.classList.remove('hidden');
+                target.classList.add('fade-in');
+            }
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => {
+                if(el.getAttribute('onclick').includes(view)) el.classList.add('active');
+            });
+            document.getElementById('page-title').innerText = view === 'invoice-tool' ? 'Invoice Tool' : view.charAt(0).toUpperCase() + view.slice(1);
+            
+            if(view === 'invoice-tool') { this.loadInvoiceClients(); this.loadStockDatalist(); }
+            if(view === 'delivery') this.loadDeliveryClients();
+            if(view === 'accounting') this.renderAccounting();
+            
+            // Close sidebar on mobile nav
+            if(window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+        },
+
+        /* CRM */
+        openClientModal(id) {
+            document.querySelector('#client-modal form').reset();
+            document.querySelector('#client-modal [name=id]').value = '';
+            document.getElementById('client-photo-preview').innerHTML = '<span>📷</span>';
+            document.querySelector('#client-modal [name=photo]').value = '';
+
+            if(id) {
+                const c = this.db.clients.find(x => x.id === id);
+                if(c) {
+                    const f = document.querySelector('#client-modal form');
+                    f.id.value = c.id; 
+                    f.name.value = c.name; 
+                    f.phone.value = c.phone||''; 
+                    f.address.value = c.address||'';
+                    f.type.value = c.type;
+                    f.location.value = c.locationPin || '';
+                    f.photo.value = c.photo || '';
+                    if(c.photo) {
+                         document.getElementById('client-photo-preview').innerHTML = `<img src="${c.photo}" style="width:100%; height:100%; object-fit:cover;">`;
+                    }
+                }
+            }
+            document.getElementById('client-modal').classList.add('active');
+        },
+        closeModal(id) { document.getElementById(id).classList.remove('active'); },
+        
+        previewClientPhoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('client-photo-preview').innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+                    document.querySelector('#client-modal [name=photo]').value = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        },
+
+        saveClient(e) {
+            e.preventDefault();
+            const f = e.target;
+            const data = { 
+                id: f.id.value ? Number(f.id.value) : Date.now(),
+                name: f.name.value, 
+                type: f.type.value, 
+                phone: f.phone.value, 
+                address: f.address.value,
+                locationPin: f.location.value,
+                photo: f.photo.value
+            };
+            const idx = this.db.clients.findIndex(c => c.id === data.id);
+            if(idx >= 0) this.db.clients[idx] = data; else this.db.clients.push(data);
+            this.save();
+            this.closeModal('client-modal');
+        },
+        deleteClient(id) {
+            if(confirm('Delete client?')) { this.db.clients = this.db.clients.filter(c => c.id !== id); this.save(); }
+        },
+        findNearbyClients() {
+            document.getElementById('map-container').classList.remove('hidden');
+            if(navigator.geolocation) navigator.geolocation.getCurrentPosition(() => alert("Location Found. Use Navigate buttons."), () => alert("Location access denied."));
+        },
+        openMap(addr) { if(addr) window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`, '_blank'); else alert("No address"); },
+        openLink(link) { if(link) window.open(link, '_blank'); else alert("No location pin saved."); },
+
+        /* Invoice Tool Logic */
+        loadInvoiceClients() {
+            const sel = document.getElementById('inv-client');
+            sel.innerHTML = '<option value="">Select Client</option>';
+            this.db.clients.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id; opt.innerText = c.name;
+                sel.appendChild(opt);
+            });
+        },
+        loadStockDatalist() {
+            const list = document.getElementById('stock-list');
+            list.innerHTML = '';
+            this.db.stock.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.name;
+                list.appendChild(opt);
+            });
+        },
+        updateInvoiceClient() {
+            const id = document.getElementById('inv-client').value;
+            const c = this.db.clients.find(x => x.id == id);
+            if(c) {
+                document.getElementById('disp-client-name').innerText = c.name;
+                document.getElementById('disp-client-addr').innerText = c.address || '';
+                document.getElementById('disp-client-phone').innerText = c.phone || '';
+            } else {
+                document.getElementById('disp-client-name').innerText = 'Select a Client';
+                document.getElementById('disp-client-addr').innerText = '';
+                document.getElementById('disp-client-phone').innerText = '';
+            }
+        },
+        addInvoiceItem() {
+            const desc = document.getElementById('inv-item-desc').value;
+            const qty = Number(document.getElementById('inv-item-qty').value);
+            const rate = Number(document.getElementById('inv-item-rate').value);
+            const note = document.getElementById('inv-item-note').value;
+
+            if(!desc || qty <= 0 || rate < 0) return alert("Invalid item details");
+            
+            const itemDesc = note ? `${desc} (${note})` : desc;
+            this.invoiceItems.push({ desc: itemDesc, rawDesc: desc, qty, rate, total: qty * rate });
+            
+            // Clear inputs
+            document.getElementById('inv-item-desc').value = '';
+            document.getElementById('inv-item-note').value = '';
+            document.getElementById('inv-item-qty').value = '1';
+            document.getElementById('inv-item-rate').value = '';
+            this.renderInvoiceTable();
+        },
+        renderInvoiceTable() {
+            const tbody = document.getElementById('inv-items-body');
+            tbody.innerHTML = '';
+            let subtotal = 0;
+            this.invoiceItems.forEach((item, idx) => {
+                subtotal += item.total;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="padding:10px; border-bottom:1px solid #eee;">${item.desc}</td>
+                    <td style="padding:10px; border-bottom:1px solid #eee; text-align:right;">${item.qty}</td>
+                    <td style="padding:10px; border-bottom:1px solid #eee; text-align:right;">₹${item.rate.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #eee; text-align:right;">₹${item.total.toFixed(2)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            // Get Tax Rate
+            const taxRate = Number(document.getElementById('inv-tax-rate').value);
+            const tax = subtotal * (taxRate / 100);
+            const total = subtotal + tax;
+            
+            document.getElementById('inv-subtotal').innerText = '₹' + subtotal.toFixed(2);
+            document.getElementById('inv-tax-label').innerText = taxRate > 0 ? `GST (${taxRate}%)` : 'Tax (0%)';
+            document.getElementById('inv-tax').innerText = '₹' + tax.toFixed(2);
+            document.getElementById('inv-total').innerText = '₹' + total.toFixed(2);
+            
+            document.getElementById('disp-inv-num').innerText = '#' + document.getElementById('inv-number').value;
+            document.getElementById('disp-inv-date').innerText = 'Date: ' + document.getElementById('inv-date').value;
+        },
+        printInvoice() {
+            window.print();
+        },
+        downloadPDF() {
+            alert('Opening Print Dialog. Please select "Save as PDF" as the destination.');
+            window.print();
+        },
+        shareInvoice() {
+            const url = window.location.href;
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Invoice ' + document.getElementById('inv-number').value,
+                    text: 'Please find the invoice attached.',
+                    url: url
+                }).catch(console.error);
+            } else {
+                prompt("Copy this link to share:", url);
+            }
+        },
+        saveInvoice() {
+            if(this.invoiceItems.length === 0) return alert("Add items first");
+            const clientId = document.getElementById('inv-client').value;
+            if(!clientId) return alert("Select a client");
+            
+            // Deduct Stock
+            this.invoiceItems.forEach(item => {
+                // Find stock by exact name match (rawDesc)
+                const stockItem = this.db.stock.find(s => s.name.toLowerCase() === item.rawDesc.toLowerCase());
+                if(stockItem) {
+                    this.updateStock(stockItem.sku, item.qty, 'out', `Invoice #${document.getElementById('inv-number').value}`);
+                }
+            });
+
+            // Calculate total
+            const sub = this.invoiceItems.reduce((acc, i) => acc + i.total, 0);
+            const taxRate = Number(document.getElementById('inv-tax-rate').value);
+            const total = sub * (1 + (taxRate/100));
+            
+            // Save as Sale
+            this.db.sales.push({
+                id: Date.now(),
+                clientId: Number(clientId),
+                desc: `Invoice #${document.getElementById('inv-number').value}`,
+                amount: total,
+                date: document.getElementById('inv-date').value,
+                items: this.invoiceItems, // Store full items
+                status: 'Invoiced'
+            });
+            this.save();
+            alert("Invoice saved to Sales History & Stock Updated!");
+            this.invoiceItems = [];
+            this.renderInvoiceTable();
+            document.getElementById('inv-number').value = 'INV-' + Math.floor(Math.random() * 1000);
+        },
+
+        /* Calculator & GST Tools */
+        setGSTRate(rate) {
+            document.getElementById('gst-calc-rate').value = rate;
+            this.calcGST();
+        },
+        setGSTMode(mode) {
+            document.getElementById('gst-calc-mode').value = mode;
+            if(mode === 'add') {
+                document.getElementById('btn-gst-add').classList.add('btn-primary');
+                document.getElementById('btn-gst-add').classList.remove('btn-outline');
+                document.getElementById('btn-gst-sub').classList.remove('btn-primary');
+                document.getElementById('btn-gst-sub').classList.add('btn-outline');
+            } else {
+                document.getElementById('btn-gst-add').classList.remove('btn-primary');
+                document.getElementById('btn-gst-add').classList.add('btn-outline');
+                document.getElementById('btn-gst-sub').classList.add('btn-primary');
+                document.getElementById('btn-gst-sub').classList.remove('btn-outline');
+            }
+            this.calcGST();
+        },
+        calcGST() {
+            const amount = parseFloat(document.getElementById('gst-calc-amount').value) || 0;
+            const rate = parseFloat(document.getElementById('gst-calc-rate').value);
+            const mode = document.getElementById('gst-calc-mode').value;
+            
+            let gstAmt = 0;
+            let net = 0;
+            let total = 0;
+            
+            if (mode === 'add') {
+                gstAmt = amount * (rate / 100);
+                total = amount + gstAmt;
+                net = amount;
+            } else {
+                // Remove GST (Inclusive)
+                // Formula: GST Amount = Amount - [Amount x {100 / (100 + Rate)}]
+                const base = amount * (100 / (100 + rate));
+                gstAmt = amount - base;
+                net = base;
+                total = amount;
+            }
+            
+            document.getElementById('gst-res-net').innerText = '₹' + net.toFixed(2);
+            document.getElementById('gst-res-amt').innerText = '₹' + gstAmt.toFixed(2);
+            document.getElementById('gst-res-total').innerText = '₹' + total.toFixed(2);
+        },
+        
+        // Basic Calculator
+        calcIn(val) {
+            if(val === 'C') {
+                this.calcInput = '';
+            } else if(val === 'back') {
+                this.calcInput = this.calcInput.slice(0, -1);
+            } else {
+                this.calcInput += val;
+            }
+            document.getElementById('calc-display').value = this.calcInput || '0';
+        },
+        calcRes() {
+            try {
+                // Using Function constructor for a safer eval alternative in a purely static local context
+                this.calcInput = String(new Function('return ' + this.calcInput)());
+                document.getElementById('calc-display').value = this.calcInput;
+            } catch(e) {
+                document.getElementById('calc-display').value = 'Error';
+                this.calcInput = '';
+            }
+        },
+
+        /* Delivery Logic */
+        loadDeliveryClients() {
+             const sel = document.getElementById('del-client-select');
+             sel.innerHTML = '';
+             this.db.clients.forEach(c => {
+                sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+             });
+        },
+        saveDelivery(e) {
+            e.preventDefault();
+            const f = e.target;
+            this.db.deliveries.push({
+                id: f.trackId.value,
+                clientId: Number(f.clientId.value),
+                status: 'Pending',
+                history: [{status:'Pending', date: new Date().toLocaleDateString()}]
+            });
+            this.save();
+            this.closeModal('delivery-modal');
+            this.renderDeliveries();
+        },
+        renderDeliveries() {
+            const tbody = document.querySelector('#delivery-table tbody');
+            tbody.innerHTML = '';
+            this.db.deliveries.forEach((d, idx) => {
+                const c = this.db.clients.find(x => x.id === d.clientId);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td><b>${d.id}</b></td><td>${c ? c.name : 'Unknown'}</td><td><span class="badge badge-yellow">${d.status}</span></td><td><button class="btn-sm btn-primary" onclick="app.viewDelivery(${idx})">Track</button></td>`;
+                tbody.appendChild(tr);
+            });
+        },
+        viewDelivery(idx) {
+            this.activeDelivery = this.db.deliveries[idx];
+            document.getElementById('delivery-detail').style.display = 'block';
+            document.getElementById('trk-id').innerText = this.activeDelivery.id;
+            
+            // Visual steps
+            document.getElementById('trk-step-shipped').classList.remove('active');
+            document.getElementById('trk-step-delivered').classList.remove('active');
+            
+            if(this.activeDelivery.status === 'Shipped' || this.activeDelivery.status === 'Delivered') {
+                document.getElementById('trk-step-shipped').classList.add('active');
+            }
+            if(this.activeDelivery.status === 'Delivered') {
+                document.getElementById('trk-step-delivered').classList.add('active');
+            }
+        },
+        updateDeliveryStatus() {
+            if(!this.activeDelivery) return;
+            if(this.activeDelivery.status === 'Pending') this.activeDelivery.status = 'Shipped';
+            else if(this.activeDelivery.status === 'Shipped') this.activeDelivery.status = 'Delivered';
+            
+            this.save();
+            this.renderDeliveries();
+            this.viewDelivery(this.db.deliveries.indexOf(this.activeDelivery));
+        },
+        shareTracking() {
+            const url = "https://acrozela-track.com/" + (this.activeDelivery ? this.activeDelivery.id : '');
+            prompt("Copy Tracking Link:", url);
+        },
+
+        /* Accounting */
+        renderAccounting() {
+            const debit = this.db.expenses.reduce((a,b) => a + b.amount, 0);
+            const credit = this.db.sales.reduce((a,b) => a + b.amount, 0);
+            
+            document.getElementById('acc-debit').innerText = '₹' + debit.toFixed(2);
+            document.getElementById('acc-credit').innerText = '₹' + credit.toFixed(2);
+            document.getElementById('acc-balance').innerText = '₹' + (credit - debit).toFixed(2);
+            
+            const tbody = document.querySelector('#ledger-table tbody');
+            tbody.innerHTML = '';
+            
+            const ledger = [
+                ...this.db.sales.map(s => ({date: s.date, desc: 'Sales - ' + s.desc, debit: 0, credit: s.amount})),
+                ...this.db.expenses.map(e => ({date: e.date, desc: 'Exp - ' + e.category, debit: e.amount, credit: 0}))
+            ].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            ledger.forEach(l => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td class="text-xs">${l.date}</td><td class="text-xs">${l.desc}</td><td style="text-align:right; color:var(--danger)">${l.debit ? '₹'+l.debit : '-'}</td><td style="text-align:right; color:var(--success)">${l.credit ? '₹'+l.credit : '-'}</td>`;
+                tbody.appendChild(tr);
+            });
+        },
+
+        /* Stock & Expenses */
+        openStockModal() { document.querySelector('#stock-modal form').reset(); document.getElementById('stock-modal').classList.add('active'); },
+        saveStock(e) {
+            e.preventDefault(); const f=e.target;
+            const sku = f.sku.value;
+            // Check if exists
+            const exists = this.db.stock.find(s => s.sku === sku);
+            if(exists) { alert("SKU already exists. Use the buttons in the table to adjust stock."); return; }
+            
+            const newItem = {id:Date.now(), sku:sku, name:f.name.value, qty:Number(f.qty.value), price:Number(f.price.value)};
+            this.db.stock.push(newItem);
+            
+            // Log Initial
+            this.db.stockMovements.push({
+                date: new Date().toLocaleDateString(),
+                item: f.name.value,
+                type: 'in',
+                change: Number(f.qty.value),
+                reason: 'Initial Stock'
+            });
+            
+            this.save(); this.closeModal('stock-modal');
+        },
+        // Open the adjustment modal
+        promptStockAdjust(sku, type) {
+            const item = this.db.stock.find(s => s.sku === sku);
+            if(!item) return;
+            const f = document.querySelector('#stock-adjust-modal form');
+            f.reset();
+            f.sku.value = sku;
+            f.type.value = type;
+            document.getElementById('adj-title').innerText = item.name + (type==='in' ? ' (Add Stock)' : ' (Remove Stock)');
+            document.getElementById('adj-type-label').innerText = type === 'in' ? 'Add' : 'Remove';
+            document.getElementById('stock-adjust-modal').classList.add('active');
+        },
+        confirmStockAdjustment(e) {
+            e.preventDefault();
+            const f = e.target;
+            const sku = f.sku.value;
+            const type = f.type.value;
+            const qty = Number(f.qty.value);
+            const note = f.note.value || 'Manual Adjustment';
+            this.updateStock(sku, qty, type, note);
+            this.closeModal('stock-adjust-modal');
+        },
+        updateStock(sku, qty, type, reason) {
+            const item = this.db.stock.find(s => s.sku === sku);
+            if(!item) return;
+            
+            if(type === 'in') {
+                item.qty += qty;
+            } else {
+                if(item.qty < qty) { alert('Insufficient stock for ' + item.name); return; }
+                item.qty -= qty;
+            }
+            
+            // Log
+            this.db.stockMovements.unshift({
+                date: new Date().toLocaleDateString(),
+                item: item.name,
+                type: type,
+                change: qty,
+                reason: reason
+            });
+            this.save();
+        },
+        saveExpense(e) {
+            e.preventDefault(); const f=e.target;
+            this.db.expenses.push({id:Date.now(), category:f.category.value, desc:f.desc.value, amount:Number(f.amount.value), date:new Date().toISOString().split('T')[0]});
+            this.save(); this.closeModal('expense-modal');
+        },
+
+        /* Google Login */
+        openModal(id) { document.getElementById(id).classList.add('active'); },
+        googleLogin(e) {
+            e.preventDefault();
+            const email = e.target.email.value;
+            localStorage.setItem('acrozela_g_user', email);
+            this.setGoogleUser(email);
+            this.closeModal('google-login-modal');
+        },
+        setGoogleUser(email) {
+            this.currentUser = email;
+            document.getElementById('g-auth-btn').classList.add('hidden');
+            document.getElementById('g-user-profile').classList.remove('hidden');
+            document.getElementById('g-user-profile').classList.add('flex');
+            document.getElementById('g-email').innerText = email;
+            
+            document.getElementById('g-tools-lock').classList.add('hidden');
+            document.getElementById('g-tools-grid').classList.remove('hidden');
+        },
+
+        /* Render Main Views */
+        render() {
+            const rev = this.db.sales.reduce((a,b)=>a+b.amount,0);
+            const exp = this.db.expenses.reduce((a,b)=>a+b.amount,0);
+            document.getElementById('d-clients').innerText = this.db.clients.length;
+            document.getElementById('d-revenue').innerText = '₹'+rev.toFixed(2);
+            document.getElementById('d-expenses').innerText = '₹'+exp.toFixed(2);
+            document.getElementById('d-profit').innerText = '₹'+(rev-exp).toFixed(2);
+            
+            if(this.db.clients.length || this.db.sales.length) {
+                document.getElementById('empty-state').classList.add('hidden');
+                document.getElementById('dashboard-charts').classList.remove('hidden');
+            }
+
+            // Clients Table
+            const cBody = document.querySelector('#client-table tbody'); cBody.innerHTML = '';
+            this.db.clients.forEach(c => {
+                const tr = document.createElement('tr');
+                const photoSrc = c.photo ? c.photo : 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2NjYyIgZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==';
+                
+                // Calculate Order Count
+                const orderCount = this.db.sales.filter(s => s.clientId === c.id).length;
+                
+                tr.innerHTML = `
+                    <td><img src="${photoSrc}" class="client-photo"></td>
+                    <td>
+                        <div class="font-bold">${c.name}</div>
+                        <span class="badge badge-blue">${c.type}</span>
+                    </td>
+                    <td>
+                        <div class="text-sm">${c.phone||'No Phone'}</div>
+                        <div class="text-xs text-secondary">${c.address||'No Address'}</div>
+                        ${c.locationPin ? `<a href="${c.locationPin}" target="_blank" class="text-xs" style="color:var(--primary);">View Location ↗</a>` : ''}
+                    </td>
+                    <td>
+                        <div class="font-bold">${orderCount} Orders</div>
+                    </td>
+                    <td>
+                        <button class="btn-sm btn-outline" onclick="app.openClientModal(${c.id})">Edit</button> 
+                        <button class="btn-sm btn-danger" onclick="app.deleteClient(${c.id})">Del</button>
+                    </td>`;
+                cBody.appendChild(tr);
+            });
+
+            // Sales Table
+            const sBody = document.querySelector('#sales-table tbody'); sBody.innerHTML = '';
+            this.db.sales.forEach(s => {
+                const c = this.db.clients.find(x=>x.id===s.clientId);
+                // Format Items
+                let itemSummary = '';
+                if(s.items && s.items.length > 0) {
+                     itemSummary = s.items.map(i => `<div class="text-xs">• ${i.desc} <b>x${i.qty}</b></div>`).join('');
+                } else {
+                     itemSummary = `<div class="text-xs text-secondary">${s.desc}</div>`;
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${s.date}</td>
+                    <td>${c?c.name:'Unknown'}</td>
+                    <td><span class="badge badge-purple">Invoice</span></td>
+                    <td>${itemSummary}</td>
+                    <td class="font-bold">₹${s.amount.toFixed(2)}</td>`;
+                sBody.appendChild(tr);
+            });
+
+            // Stock Table
+            const stBody = document.querySelector('#stock-table tbody'); stBody.innerHTML = '';
+            this.db.stock.forEach(s => {
+                 const tr = document.createElement('tr');
+                 tr.innerHTML = `<td>${s.sku}</td><td>${s.name}</td><td><b>${s.qty}</b></td><td>₹${s.price}</td><td>₹${(s.qty*s.price).toFixed(2)}</td>
+                 <td>
+                    <button class="btn-sm btn-outline" onclick="app.promptStockAdjust('${s.sku}','in')" title="Restock">+</button>
+                    <button class="btn-sm btn-outline" onclick="app.promptStockAdjust('${s.sku}','out')" title="Remove">-</button>
+                 </td>`;
+                 stBody.appendChild(tr);
+            });
+            
+            // Stock Movement Table
+            const mvBody = document.querySelector('#stock-move-table tbody'); mvBody.innerHTML = '';
+            // Show recent 50 movements
+            this.db.stockMovements.slice(0,50).forEach(m => {
+                const tr = document.createElement('tr');
+                const badgeClass = m.type === 'in' ? 'badge-green' : 'badge-red';
+                const sign = m.type === 'in' ? '+' : '-';
+                tr.innerHTML = `<td class="text-xs">${m.date}</td><td class="text-xs">${m.item}</td><td><span class="badge ${badgeClass}">${m.type.toUpperCase()}</span></td><td>${sign}${m.change}</td><td class="text-xs">${m.reason}</td>`;
+                mvBody.appendChild(tr);
+            });
+
+            // Expenses Table
+            const eBody = document.querySelector('#expense-table tbody'); eBody.innerHTML = '';
+            this.db.expenses.forEach(x => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${x.date}</td><td>${x.category}</td><td>${x.desc}</td><td>₹${x.amount.toFixed(2)}</td>`;
+                eBody.appendChild(tr);
+            });
+            
+            // Recent Activity
+            const rBody = document.querySelector('#recent-table tbody'); rBody.innerHTML = '';
+            const rec = [...this.db.sales.map(x=>({...x, t:'Sale'})), ...this.db.expenses.map(x=>({...x, t:'Exp'}))].sort((a,b)=>b.id-a.id).slice(0,5);
+            rec.forEach(r => {
+                 const tr = document.createElement('tr');
+                 tr.innerHTML = `<td>${r.t}</td><td>${r.desc||r.category}</td><td style="text-align:right; color:${r.t=='Sale'?'var(--success)':'var(--danger)'}">₹${r.amount.toFixed(2)}</td>`;
+                 rBody.appendChild(tr);
+            });
+            
+            this.renderDeliveries();
+        },
+        
+        resetData() {
+            if(confirm("Delete all data?")) { localStorage.removeItem('acrozela_data'); localStorage.removeItem('acrozela_g_user'); location.reload(); }
+        }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => app.init());
+</script>
+</body>
+</html>
