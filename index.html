@@ -39,6 +39,32 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
+        /* Full Screen Overlay Styles (Loading & Login) */
+        .overlay-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg);
+            z-index: 1000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease-out, visibility 0.5s;
+        }
+        .overlay-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        
+        /* Loading Animation */
+        .loader-content { text-align: center; animation: fadeIn 1s ease-in-out; }
+        .loader-logo { width: 300px; height: auto; margin-bottom: 1rem; }
+        .loader-text { font-size: 1.5rem; color: var(--primary); font-weight: 600; letter-spacing: 2px; margin-top: 1rem; animation: pulse 2s infinite; }
+
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Login Box */
+        .login-box {
+            background: white; padding: 3rem; border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            width: 100%; max-width: 400px; text-align: center;
+        }
+        .login-logo { height: 40px; margin-bottom: 2rem; }
+        
         /* Layout */
         #sidebar { 
             width: var(--sidebar-width); 
@@ -146,7 +172,7 @@
         .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
 
         /* Forms */
-        .form-group { margin-bottom: 1rem; }
+        .form-group { margin-bottom: 1rem; text-align: left; }
         .form-label { display: block; margin-bottom: 0.4rem; font-weight: 500; font-size: 0.875rem; color: var(--text); }
         .form-input, .form-select, textarea { width: 100%; padding: 0.7rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; transition: 0.2s; background: #fff; font-family: inherit; }
         .form-input:focus, .form-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
@@ -232,6 +258,42 @@
 </head>
 <body>
 
+<!-- Loading Screen -->
+<div id="loading-screen" class="overlay-screen">
+    <div class="loader-content">
+        <svg class="loader-logo" viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg">
+            <text x="0" y="30" font-family="sans-serif" font-weight="900" font-size="28" fill="#2563eb" letter-spacing="2">
+                ACROZELA<tspan fill="#9ca3af">.</tspan>
+            </text>
+        </svg>
+        <div class="loader-text">Welcome ACROZELA</div>
+    </div>
+</div>
+
+<!-- Login Screen -->
+<div id="login-screen" class="overlay-screen hidden">
+    <div class="login-box">
+        <svg class="login-logo" viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg">
+            <text x="0" y="30" font-family="sans-serif" font-weight="900" font-size="28" fill="#2563eb" letter-spacing="2">
+                ACROZELA<tspan fill="#9ca3af">.</tspan>
+            </text>
+        </svg>
+        <h3 class="mb-4">Secure Login</h3>
+        <form onsubmit="app.handleLogin(event)">
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-input" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" name="password" class="form-input" placeholder="Enter password" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-full mt-4">Login to Dashboard</button>
+            <p id="login-error" class="text-xs mt-4" style="color:var(--danger); display:none;">Invalid credentials. Please try again.</p>
+        </form>
+    </div>
+</div>
+
 <div id="sidebar">
     <div class="brand-container">
         <!-- Recreated Logo using SVG -->
@@ -270,7 +332,13 @@
     </div>
     
     <div class="sidebar-footer">
-        2025 COPYRIGHT<br>ACROZELA BILLING SOFTWARE
+        <svg class="brand-svg" viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg" style="height:20px; opacity:0.6; margin-bottom:5px;">
+            <text x="0" y="30" font-family="sans-serif" font-weight="900" font-size="28" fill="#334155" letter-spacing="2">
+                ACROZELA<tspan fill="#9ca3af">.</tspan>
+            </text>
+        </svg>
+        <br>
+        2025 COPYRIGHT
     </div>
 </div>
 
@@ -889,6 +957,17 @@
         calcInput: '',
         
         init() {
+            // Loading Sequence & Login Check
+            setTimeout(() => {
+                document.getElementById('loading-screen').classList.add('hidden');
+                
+                // Check Session Login (simple secure gate simulation)
+                const isLoggedIn = sessionStorage.getItem('acrozela_auth') === 'true';
+                if (!isLoggedIn) {
+                    document.getElementById('login-screen').classList.remove('hidden');
+                }
+            }, 2500); // 2.5s Loading Animation
+
             const saved = localStorage.getItem('acrozela_data');
             if (saved) { 
                 this.db = JSON.parse(saved); 
@@ -907,6 +986,21 @@
             this.render();
             const hash = window.location.hash.replace('#', '');
             this.nav(hash || 'dashboard');
+        },
+
+        handleLogin(e) {
+            e.preventDefault();
+            const email = e.target.email.value.trim();
+            const pass = e.target.password.value.trim();
+            const err = document.getElementById('login-error');
+            
+            if (email === 'ACROZELA@GMAIL.COM' && pass === 'SHIVAsivan') {
+                sessionStorage.setItem('acrozela_auth', 'true');
+                document.getElementById('login-screen').classList.add('hidden');
+                err.style.display = 'none';
+            } else {
+                err.style.display = 'block';
+            }
         },
 
         save() {
